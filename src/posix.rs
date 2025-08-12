@@ -1,7 +1,7 @@
 extern crate libc;
 
 use super::daemon::*;
-use std::io::{Error, ErrorKind};
+use std::io::Error;
 use std::sync::mpsc::channel;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
@@ -40,10 +40,7 @@ impl<F: FnOnce(Receiver<State>)> DaemonFunc for DaemonFuncHolder<F> {
                 func(rx);
                 Ok(())
             }
-            None => Err(Error::new(
-                ErrorKind::Other,
-                "INTERNAL ERROR: Can't unwrap daemon function",
-            )),
+            None => Err(Error::other("INTERNAL ERROR: Can't unwrap daemon function")),
         }
     }
 
@@ -51,9 +48,9 @@ impl<F: FnOnce(Receiver<State>)> DaemonFunc for DaemonFuncHolder<F> {
         match self.tx {
             Some(ref tx) => match tx.send(state) {
                 Ok(_) => Ok(()),
-                Err(e) => Err(Error::new(ErrorKind::Other, e)),
+                Err(e) => Err(Error::other(e)),
             },
-            None => Err(Error::new(ErrorKind::Other, "Service is already exited")),
+            None => Err(Error::other("Service is already exited")),
         }
     }
 
@@ -96,10 +93,7 @@ fn guard_compare_and_swap(
 ) -> Result<(), Error> {
     daemon_wrapper(|daemon_static: &mut DaemonHolder| -> Result<(), Error> {
         if daemon_static.holder != old_value {
-            return Err(Error::new(
-                ErrorKind::Other,
-                "This function is not reentrant.",
-            ));
+            return Err(Error::other("This function is not reentrant."));
         }
         daemon_static.holder = new_value;
         Ok(())

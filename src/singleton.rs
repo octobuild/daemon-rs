@@ -16,7 +16,7 @@ impl<T> SingletonHolder<T> {
         SingletonHolder { inner: mutex }
     }
 
-    pub fn lock(&self) -> LockResult<MutexGuard<T>> {
+    pub fn lock(&self) -> LockResult<MutexGuard<'_, T>> {
         self.inner.lock()
     }
 }
